@@ -1,53 +1,55 @@
 import streamlit as st
 import pandas as pd
+from io import BytesIO
 
-st.set_page_config(page_title="Dashboard de Valores", layout="wide")
+st.set_page_config(page_title="Dashboard Financeiro", layout="wide")
+st.title("📊 Dashboard Financeiro - SEMEC")
 
-st.title("📊 Dashboard de Valores por Unidade Gestora e Classificação")
-
-# Upload do arquivo
-uploaded = st.file_uploader(r"C:\Users\03362306217\Desktop\teste.xlsx", type=["xlsx"])
-
+uploaded = st.file_uploader("Carregar arquivo Excel", type=["xlsx"])
 if uploaded:
-    # ✅ Leitura já tratando número brasileiro
-    df = pd.read_excel(uploaded, decimal=",", thousands=".")
+    df = pd.read_excel(uploaded, engine="openpyxl")
 
-    # Colunas numéricas (pega valores financeiros e saldos)
-    valor_cols = [col for col in df.columns if "Vlr" in col or "Sld" in col]
+    # Conversão de colunas numéricas
+    for col in df.columns:
+        if df[col].dtype == "object":
+            try:
+                df[col] = (
+                    df[col]
+                    .astype(str)
+                    .str.replace(".", "", regex=False)
+                    .str.replace(",", ".", regex=False)
+                    .astype(float)
+                )
+            except:
+                pass
 
-    # 🔹 Sidebar para filtros
-    st.sidebar.header("Filtros")
-
-    # 🔹 Filtro de unidade gestora
+    # 🔹 Filtro por Unidade Gestora
     if "Unidade Gestora" in df.columns:
-        unidades = df["Unidade Gestora"].dropna().unique().tolist()
-        unidade_sel = st.sidebar.multiselect(
-            "Selecione a(s) Unidade(s) Gestora(s):",
-            sorted(unidades),
-            default=unidades
-        )
-        df = df[df["Unidade Gestora"].isin(unidade_sel)]
+        unidade = st.selectbox("Selecione a Unidade Gestora", df["Unidade Gestora"].unique())
+        df = df[df["Unidade Gestora"] == unidade]
 
-    # 🔹 Filtro de classificação
-    opcoes = ["Continuada", "Fixo/Outro", "Valores Totais"]
-    filtros = st.sidebar.multiselect("Selecione as Classificações:", opcoes, default=opcoes)
+    # 🔹 Somatório das colunas numéricas
+    totais = df.select_dtypes(include="number").sum().round(2)
 
-    # Aplica o filtro de classificação
-    if "Valores Totais" not in filtros:
-        if "Classificação" in df.columns:
-            df = df[df["Classificação"].isin(filtros)]
+    st.subheader("📌 Totais da Unidade Selecionada")
+    st.dataframe(totais)
 
-    # 🔹 Cálculo dos totais
-    totais = df[valor_cols].sum(numeric_only=True).round(2)
+    # 🔹 Função para exportar Excel
+    def to_excel(df):
+        output = BytesIO()
+        with pd.ExcelWriter(output, engine="openpyxl") as writer:
+            df.to_excel(writer, index=False, sheet_name="Filtrado")
+        processed_data = output.getvalue()
+        return processed_data
 
-    # Função para formatar em padrão brasileiro
-    def br_fmt(v: float) -> str:
-        return f"{v:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
-
-    # 🔹 Exibir os totais em cards
-    st.subheader("📌 Totais por Coluna (após filtros aplicados)")
-    cols = st.columns(3)
-    for i, (col, val) in enumerate(totais.items()):
-        with cols[i % 3]:
-            st.metric(label=col, value=br_fmt(val))
-
+    # 🔹 Botão para download do Excel
+    st.subheader("⬇️ Baixar arquivo filtrado")
+    excel_file = to_excel(df)
+    st.download_button(
+        label="📥 Baixar Excel",
+        data=excel_file,
+        file_name=f"dados_filtrados_{unidade}.xlsx",
+        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    )
+else:
+    st.info("Faça upload de um arquivo Excel para começar.")
