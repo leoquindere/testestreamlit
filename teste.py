@@ -1,5 +1,4 @@
-import tkinter as tk
-from tkinter import filedialog, messagebox
+
 import requests
 import pandas as pd
 import pdfplumber
@@ -76,25 +75,4 @@ def baixar_excel():
                 f.write(resultado_excel.getvalue())
             messagebox.showinfo("Salvo", "Arquivo Excel baixado com sucesso.")
 
-# --- GUI layout ---
-resultado_excel = None
 
-root = tk.Tk()
-root.title("Conversor PDF para Excel (sem Java)")
-
-pdf_entry = tk.Entry(root, width=60)
-pdf_entry.grid(row=0, column=0, columnspan=2, padx=10, pady=10)
-
-btn_arquivo = tk.Button(root, text="Selecionar PDF", command=escolher_pdf)
-btn_arquivo.grid(row=0, column=2, padx=10)
-
-btn_converter = tk.Button(root, text="Converter para Excel", command=converter_pdf)
-btn_converter.grid(row=1, column=0, columnspan=2, pady=10)
-
-btn_baixar = tk.Button(root, text="Baixar Excel", command=baixar_excel, state="disabled")
-btn_baixar.grid(row=1, column=2, pady=10)
-
-label_info = tk.Label(root, text="Cole a URL do PDF acima ou selecione um arquivo PDF.")
-label_info.grid(row=2, column=0, columnspan=3, pady=5)
-
-root.mainloop()
