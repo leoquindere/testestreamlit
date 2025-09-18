@@ -46,11 +46,12 @@ if uploaded_file is not None:
     try:
         excel_bytes = pdf_para_excel_bytes(uploaded_file)
         st.download_button(
-            label="Baixar Excel convertido do PDF enviado",
+            label="Baixar Excel convertido",
             data=excel_bytes,
             file_name="tabelas_convertidas.xlsx",
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         )
     except Exception as e:
         st.error(f"Erro ao processar o arquivo: {e}")
+
 
