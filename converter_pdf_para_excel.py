@@ -17,7 +17,7 @@ def pdf_para_excel_bytes(pdf_file):
                         df.to_excel(writer, sheet_name=f'Pg{i+1}_Tab{j+1}', index=False)
     return output.getvalue()
 
-st.title("Conversor PDF para Excel (sem Java)")
+st.title("Conversor PDF para Excel")
 
 url_input = st.text_input("Cole a URL do arquivo PDF aqui:")
 
@@ -53,3 +53,4 @@ if uploaded_file is not None:
         )
     except Exception as e:
         st.error(f"Erro ao processar o arquivo: {e}")
+
